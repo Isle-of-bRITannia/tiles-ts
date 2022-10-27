@@ -19,7 +19,9 @@ type TileAPI = {
   // combine?
   map: <A, B>(f: (_: A) => B) => (tile: Tile<A>) => Tile<B>,
   pure: <A>(value: A) => Tile<A>,
-  ap: <B, A>(functionTile: Tile<(_: B) => A>) => (domainTile: Tile<B>) => Tile<A, B>
+  ap: <B, A>(functionTile: Tile<(_: B) => A>) => (domainTile: Tile<B>) => Tile<A, B>,
+  
+  fromImage: (img: HTMLImageElement) => Tile<string>
 }
 
 const API: TileAPI = {
@@ -60,6 +62,9 @@ const API: TileAPI = {
   pure: (value) => Alg.pure(value),
   ap: (functionTile) => (domainTile) => (
     Alg.ap(functionTile, domainTile)
+  ),
+  fromImage: (img) => (
+    Alg.fromImage(img)
   )
 };
 

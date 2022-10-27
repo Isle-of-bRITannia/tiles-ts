@@ -7,6 +7,10 @@ const transpose = <T>(arr2d: T[][]) => arr2d[0].map((_, colIndex) => arr2d.map(r
 const reverse = <T>(arr: T[]) => [...arr].reverse();
 const rotate = <T>(arr2d: T[][]) => transpose(arr2d).map(reverse);
 const map = <A, B>(f: (_: A) => B) => (arr: A[]) => arr.map(f);
+const splitEvery = (n: number) => <A>(arr: A[]) => {
+  return repeat(Math.ceil(arr.length / n))(null)
+    .map((_, i) =>  arr.slice(i * n, i * n + n));
+};
 
 export type Raster<T> = T[][];
 
@@ -53,5 +57,26 @@ export const rasterize: (dims: {width: number, height: number}) => <A>(tile: Til
       const domainRaster = rasterize({width, height})(domainTile);
       
       return functionRaster.map((row, i) => row.map((f, j) => f(domainRaster[i][j])));
+    },
+    FromImage: ({img}) => {
+      let imgCanvas = document.createElement('canvas');
+      imgCanvas.width = width;
+      imgCanvas.height = height;
+      let ctx = imgCanvas.getContext('2d') as CanvasRenderingContext2D;
+      
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const data = ctx.getImageData(0, 0, width, height).data;
+
+      let matrix = splitEvery(4)([...data])
+        .map(([r, g, b, a]) => `rgba(${r}, ${g}, ${b}, ${a / 255})`)
+        .reduce(({matrix, row}: {matrix: string[][], row: string[]}, rgba: string) => {
+          return row.length === width - 1
+            ? {matrix: [...matrix, [...row, rgba]], row: [] as string[]}
+            : {matrix: matrix, row: [...row, rgba]};
+        }, {matrix: [], row: []})
+        .matrix;
+                            
+      return matrix;
     }
   })
